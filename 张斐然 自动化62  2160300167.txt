@@ -1,0 +1,142 @@
+第一题与第二题
+I=imread('lena.bmp');
+I1=imnoise(I,'gaussian',0,0.1);
+I2=imnoise(I,'salt & pepper',0.1);
+h1=fspecial('average');
+h2=fspecial('laplacian');
+h3=fspecial('gaussian');
+h4=fspecial('unsharp');
+img1=imfilter(I1,h1,'replicate');
+img2=imfilter(I1,h2,'replicate');
+img3=imfilter(I1,h3,'replicate');
+img4=imfilter(I1,h4,'replicate');
+img5=imfilter(I2,h1,'replicate');
+img6=imfilter(I2,h2,'replicate');
+img7=imfilter(I2,h3,'replicate');
+img8=imfilter(I2,h4,'replicate');
+figure(1);
+subplot(2,3,1);imshow(I);title('原图');
+subplot(2,3,2);imshow(I1);title('加入高斯噪声的图');
+subplot(2,3,3);imshow(img1);title('均值滤波');
+subplot(2,3,4);imshow(img2);title('拉普拉斯滤波');
+subplot(2,3,5);imshow(img3);title('高斯滤波');
+subplot(2,3,6);imshow(img4);title('unsharp滤波');
+figure(2);
+subplot(2,3,1);imshow(I);title('原图');
+subplot(2,3,2);imshow(I2);title('加入椒盐噪声的图');
+subplot(2,3,3);imshow(img5);title('均值滤波');
+subplot(2,3,4);imshow(img6);title('拉普拉斯滤波');
+subplot(2,3,5);imshow(img7);title('高斯滤波');
+subplot(2,3,6);imshow(img8);title('unsharp滤波');
+
+
+
+
+第三题
+1.模糊滤波
+image_in=imread('lena.bmp');
+T=1;
+a=0.1;
+b=0.1;
+[m, n] = size(image_in);
+fp = zeros(m, n);
+
+for i = 1 : m
+    for j = 1 : n
+        fp(i, j) = double(image_in(i, j)) * (-1)^(i+j);
+    end
+end
+
+F = fft2(fp);
+
+
+motion1 = zeros(m, n);
+for u = 1 : m
+    for v = 1 : n
+        motion1(u, v) = (T/(pi*(u*a+v*b)))*sin(pi*(u*a+v*b))*exp(-sqrt(-1)*pi*(u*a+v*b));
+    end
+end
+
+
+I = F .* motion1;
+
+
+gp = ifft2(I);
+
+
+image_out = zeros(m, n, 'uint8');
+gp = real(gp);
+g = zeros(m, n);
+for i = 1 : m
+    for j = 1 : n
+        g(i, j) = gp(i, j) * (-1)^(i+j);
+        
+    end
+end
+mmax = max(g(:));
+mmin = min(g(:));
+range = mmax-mmin;
+for i = 1 : m
+    for j = 1 : n
+        image_out(i,j) = uint8(255 * (g(i, j)-mmin) / range);
+    end
+end
+I1=imnoise(image_out,'gaussian',0,0.10);
+imshow(I1);
+
+
+
+
+2.维纳滤波
+T=1;
+a=0.1;
+b=0.1;
+k=0.0001;
+[m, n] = size(I1);
+
+
+fp = zeros(m,n);
+
+for i = 1 : m
+    for j = 1 : n
+        fp(i, j) = double(I1(i, j)) * (-1)^(i+j);
+    end
+end
+
+ F= fft2(fp);
+
+
+motion = zeros(m, n);
+for u = 1 : m
+    for v = 1 : n
+        motion(u, v) = (T/(pi*(u*a+v*b)))*sin(pi*(u*a+v*b))*exp(-sqrt(-1)*pi*(u*a+v*b));
+        H(u,v)=1/motion(u,v)*(abs(motion(u,v)))^2/((abs(motion(u,v)))^2+k);
+    end
+end
+f=F.*H;
+
+
+
+
+gp = ifft2(f);
+
+
+image_out = zeros(m, n, 'uint8');
+gp = real(gp);
+g = zeros(m, n);
+for i = 1 : m
+    for j = 1 : n
+        g(i, j) = gp(i, j) * (-1)^(i+j);
+        
+    end
+end
+mmax = max(g(:));
+mmin = min(g(:));
+range = mmax-mmin;
+for i = 1 : m
+    for j = 1 : n
+        image_out(i,j) = uint8(255 * (g(i, j)-mmin) / range);
+    end
+end
+imshow(image_out);
+
